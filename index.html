@@ -340,7 +340,26 @@
     { id: 'meat',  name: '肉', icon: '🥩', unitK: 50, price: 160, color: 'var(--meat)' },
     { id: 'wood',  name: '木', icon: '🪵', unitK: 50, price: 160, color: 'var(--wood)' },
     { id: 'stone', name: '石', icon: '🪨', unitK: 8,  price: 160, color: 'var(--stone)' },
-    { id: 'gold',  name: '金', icon: '🪙', unitK: 2,  price: 160, color: 'var(--gold)' },
+    { id: 'gold',  name: '金', icon: `
+      <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
+        <defs>
+          <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ffe08a"/>
+            <stop offset="0.5" stop-color="#f5c542"/>
+            <stop offset="1" stop-color="#d99a1b"/>
+          </linearGradient>
+        </defs>
+        <g fill="url(#goldGrad)" stroke="#a9760f" stroke-width="2" stroke-linejoin="round">
+          <polygon points="1,62 6,44 26,44 31,62"/>
+          <polygon points="33,62 38,44 58,44 63,62"/>
+          <polygon points="17,42 22,24 42,24 47,42"/>
+        </g>
+        <g stroke="#fff3c4" stroke-width="2" stroke-linecap="round" opacity="0.8">
+          <line x1="9" y1="48" x2="22" y2="48"/>
+          <line x1="41" y1="48" x2="54" y2="48"/>
+          <line x1="25" y1="28" x2="38" y2="28"/>
+        </g>
+      </svg>`, unitK: 2, price: 160, color: 'var(--gold)' },
   ];
 
   const fmt = new Intl.NumberFormat('ja-JP');
