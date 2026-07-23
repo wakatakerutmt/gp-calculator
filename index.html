@@ -376,7 +376,7 @@
     diffValueEl.className = 'diff-value ' + cls;
     diffNoteEl.className = 'diff-note ' + cls;
     diffValueEl.innerHTML = sign + fmt.format(Math.abs(diff)) + '<span class="gp-unit">GP</span>';
-    diffNoteEl.textContent = diff > 0 ? 'GPが足りています(余剰あり)' : diff < 0 ? 'GPが不足しています' : '過不足なし';
+    diffNoteEl.textContent = diff > 0 ? 'GPが足りています(余剰あり)' : diff < 0 ? '損をしています' : '過不足なし';
   }
 
   RESOURCES.forEach(r => {
