@@ -109,6 +109,28 @@
     color: var(--muted);
     font-size: 0.95rem;
   }
+  .unit-toggle {
+    display: flex;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .unit-toggle button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 8px 11px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .unit-toggle button + button { border-left: 1px solid var(--card-border); }
+  .unit-toggle button.active {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
   .card .result {
     grid-area: result;
     text-align: right;
@@ -284,7 +306,7 @@
 <div class="container">
   <header>
     <h1><span class="sub">SAVAGE SURVIVAL</span>戦功ポイント計算機</h1>
-    <p>消費した資源量を <strong>m 単位</strong>で入力すると、必要な購入回数と合計GPを自動計算します。<br>例: 63.9m と入力 → 63,900k として計算</p>
+    <p>消費した資源量を <strong>m 単位</strong>で入力すると、必要な購入回数と合計GPを自動計算します。<br>例: 63.9m と入力 → 63,900k として計算(石・金は m / k の単位切替が可能)</p>
   </header>
 
   <div class="cards" id="cards"></div>
@@ -337,9 +359,9 @@
 
 <script>
   const RESOURCES = [
-    { id: 'meat',  name: '肉', icon: '🥩', unitK: 50, price: 160, color: 'var(--meat)' },
-    { id: 'wood',  name: '木', icon: '🪵', unitK: 50, price: 160, color: 'var(--wood)' },
-    { id: 'stone', name: '石', icon: '🪨', unitK: 8,  price: 160, color: 'var(--stone)' },
+    { id: 'meat',  name: '肉', icon: '🥩', unitK: 50, price: 160, color: 'var(--meat)', units: ['m'] },
+    { id: 'wood',  name: '木', icon: '🪵', unitK: 50, price: 160, color: 'var(--wood)', units: ['m'] },
+    { id: 'stone', name: '石', icon: '🪨', unitK: 8,  price: 160, color: 'var(--stone)', units: ['m', 'k'] },
     { id: 'gold',  name: '金', icon: `
       <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
         <defs>
@@ -359,7 +381,7 @@
           <line x1="41" y1="48" x2="54" y2="48"/>
           <line x1="25" y1="28" x2="38" y2="28"/>
         </g>
-      </svg>`, unitK: 2, price: 160, color: 'var(--gold)' },
+      </svg>`, unitK: 2, price: 160, color: 'var(--gold)', units: ['m', 'k'] },
   ];
 
   const fmt = new Intl.NumberFormat('ja-JP');
@@ -375,8 +397,12 @@
         <div class="name">${r.name}</div>
         <div class="rate">${r.unitK}k = ${r.price}GP</div>
         <div class="input-wrap">
-          <input type="number" inputmode="decimal" min="0" step="any" placeholder="0" id="in-${r.id}" aria-label="${r.name}の消費量(m)">
-          <span class="unit">m</span>
+          <input type="number" inputmode="decimal" min="0" step="any" placeholder="0" id="in-${r.id}" aria-label="${r.name}の消費量">
+          ${r.units.length > 1
+            ? `<div class="unit-toggle" id="unit-${r.id}" role="group" aria-label="${r.name}の入力単位">`
+              + r.units.map((u, i) => `<button type="button" data-unit="${u}" class="${i === 0 ? 'active' : ''}">${u}</button>`).join('')
+              + `</div>`
+            : `<span class="unit">${r.units[0]}</span>`}
         </div>
       </div>
       <div class="result">
@@ -391,8 +417,10 @@
     let total = 0;
     RESOURCES.forEach(r => {
       const raw = parseFloat(document.getElementById(`in-${r.id}`).value);
-      const m = (isFinite(raw) && raw > 0) ? raw : 0;
-      const k = m * 1000; // m → k 変換
+      const val = (isFinite(raw) && raw > 0) ? raw : 0;
+      const toggle = document.getElementById(`unit-${r.id}`);
+      const unit = toggle ? toggle.querySelector('.active').dataset.unit : 'm';
+      const k = unit === 'm' ? val * 1000 : val; // m → k 変換(k入力ならそのまま)
       const buys = Math.ceil(k / r.unitK);
       const gp = buys * r.price;
       total += gp;
@@ -416,6 +444,16 @@
 
   RESOURCES.forEach(r => {
     document.getElementById(`in-${r.id}`).addEventListener('input', calc);
+    const toggle = document.getElementById(`unit-${r.id}`);
+    if (toggle) {
+      toggle.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          toggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          calc();
+        });
+      });
+    }
   });
   document.getElementById('in-gained').addEventListener('input', calc);
 
