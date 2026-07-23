@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>サベージサバイバル 戦功ポイント計算機</title>
+<style>
+  :root {
+    --bg: #0f1420;
+    --card: #1a2233;
+    --card-border: #2a3550;
+    --text: #e8ecf4;
+    --muted: #8a94ab;
+    --accent: #f5b942;
+    --accent-dim: rgba(245, 185, 66, 0.12);
+    --meat: #e06c5a;
+    --wood: #8a6f4d;
+    --stone: #7d8ba1;
+    --gold: #f5b942;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif;
+    background: var(--bg);
+    background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(245, 185, 66, 0.08), transparent);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+  .container { max-width: 720px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 28px; }
+  header h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+  header h1 .sub {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    margin-bottom: 6px;
+  }
+  header p { color: var(--muted); font-size: 0.82rem; margin-top: 8px; line-height: 1.6; }
+
+  .cards { display: flex; flex-direction: column; gap: 12px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      "icon input result";
+    align-items: center;
+    gap: 14px;
+    border-left: 4px solid var(--res-color, var(--accent));
+  }
+  .card .icon {
+    grid-area: icon;
+    font-size: 1.9rem;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+  }
+  .card .input-area { grid-area: input; min-width: 0; }
+  .card .name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+  }
+  .card .rate {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .input-wrap input {
+    width: 100%;
+    max-width: 180px;
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 10px 12px;
+    outline: none;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    transition: border-color 0.15s;
+  }
+  .input-wrap input:focus { border-color: var(--accent); }
+  .input-wrap input::placeholder { color: #4a5468; font-weight: 400; }
+  .input-wrap .unit {
+    font-weight: 700;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+  .card .result {
+    grid-area: result;
+    text-align: right;
+    min-width: 130px;
+  }
+  .card .result .buys {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .card .result .buys strong { color: var(--text); font-size: 0.95rem; }
+  .card .result .gp {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .card .result .gp .gp-unit { font-size: 0.72rem; font-weight: 600; margin-left: 2px; }
+
+  .total {
+    margin-top: 20px;
+    background: linear-gradient(135deg, var(--accent-dim), rgba(245, 185, 66, 0.04));
+    border: 1px solid rgba(245, 185, 66, 0.4);
+    border-radius: 16px;
+    padding: 22px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .total .label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .total .label small { display: block; font-weight: 400; color: var(--muted); font-size: 0.75rem; margin-top: 3px; }
+  .total .value {
+    font-size: 2.1rem;
+    font-weight: 900;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .total .value .gp-unit { font-size: 1rem; font-weight: 700; margin-left: 4px; }
+
+  .actions { margin-top: 14px; text-align: center; }
+  .actions button {
+    background: none;
+    border: 1px solid var(--card-border);
+    color: var(--muted);
+    border-radius: 999px;
+    padding: 8px 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .actions button:hover { color: var(--text); border-color: var(--muted); }
+
+  footer {
+    margin-top: 32px;
+    text-align: center;
+    color: #4a5468;
+    font-size: 0.72rem;
+    line-height: 1.7;
+  }
+
+  @media (max-width: 540px) {
+    .card {
+      grid-template-columns: auto 1fr;
+      grid-template-areas:
+        "icon input"
+        "result result";
+    }
+    .card .result {
+      text-align: right;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-top: 1px dashed var(--card-border);
+      padding-top: 10px;
+    }
+    .card .result .buys { margin-bottom: 0; }
+    .total .value { font-size: 1.7rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1><span class="sub">SAVAGE SURVIVAL</span>戦功ポイント計算機</h1>
+    <p>消費した資源量を <strong>m 単位</strong>で入力すると、必要な購入回数と合計GPを自動計算します。<br>例: 63.9m と入力 → 63,900k として計算</p>
+  </header>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="total">
+    <div class="label">合計必要GP<small>全資源の購入コスト合計</small></div>
+    <div class="value"><span id="totalGp">0</span><span class="gp-unit">GP</span></div>
+  </div>
+
+  <div class="actions">
+    <button id="resetBtn" type="button">入力をリセット</button>
+  </div>
+
+  <footer>
+    購入回数は単位量ごとの切り上げで計算しています。<br>
+    肉 50k / 木 50k / 石 8k / 金 2k = 各160GP
+  </footer>
+</div>
+
+<script>
+  const RESOURCES = [
+    { id: 'meat',  name: '肉', icon: '🥩', unitK: 50, price: 160, color: 'var(--meat)' },
+    { id: 'wood',  name: '木', icon: '🪵', unitK: 50, price: 160, color: 'var(--wood)' },
+    { id: 'stone', name: '石', icon: '🪨', unitK: 8,  price: 160, color: 'var(--stone)' },
+    { id: 'gold',  name: '金', icon: '🪙', unitK: 2,  price: 160, color: 'var(--gold)' },
+  ];
+
+  const fmt = new Intl.NumberFormat('ja-JP');
+
+  const cardsEl = document.getElementById('cards');
+  RESOURCES.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.setProperty('--res-color', r.color);
+    card.innerHTML = `
+      <div class="icon">${r.icon}</div>
+      <div class="input-area">
+        <div class="name">${r.name}</div>
+        <div class="rate">${r.unitK}k = ${r.price}GP</div>
+        <div class="input-wrap">
+          <input type="number" inputmode="decimal" min="0" step="any" placeholder="0" id="in-${r.id}" aria-label="${r.name}の消費量(m)">
+          <span class="unit">m</span>
+        </div>
+      </div>
+      <div class="result">
+        <div class="buys">購入 <strong id="buys-${r.id}">0</strong> 回</div>
+        <div class="gp"><span id="gp-${r.id}">0</span><span class="gp-unit">GP</span></div>
+      </div>
+    `;
+    cardsEl.appendChild(card);
+  });
+
+  function calc() {
+    let total = 0;
+    RESOURCES.forEach(r => {
+      const raw = parseFloat(document.getElementById(`in-${r.id}`).value);
+      const m = (isFinite(raw) && raw > 0) ? raw : 0;
+      const k = m * 1000; // m → k 変換
+      const buys = Math.ceil(k / r.unitK);
+      const gp = buys * r.price;
+      total += gp;
+      document.getElementById(`buys-${r.id}`).textContent = fmt.format(buys);
+      document.getElementById(`gp-${r.id}`).textContent = fmt.format(gp);
+    });
+    document.getElementById('totalGp').textContent = fmt.format(total);
+  }
+
+  RESOURCES.forEach(r => {
+    document.getElementById(`in-${r.id}`).addEventListener('input', calc);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    RESOURCES.forEach(r => { document.getElementById(`in-${r.id}`).value = ''; });
+    calc();
+  });
+
+  calc();
+</script>
+</body>
+</html>
