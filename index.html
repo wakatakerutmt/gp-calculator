@@ -155,6 +155,82 @@
   }
   .total .value .gp-unit { font-size: 1rem; font-weight: 700; margin-left: 4px; }
 
+  .balance {
+    margin-top: 12px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .balance .gained {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .balance .gained label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .balance .gained .input-wrap input { max-width: 160px; }
+  .balance .diff { text-align: right; }
+  .balance .diff .diff-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .balance .diff .diff-value {
+    font-size: 1.6rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .balance .diff .diff-value .gp-unit { font-size: 0.85rem; font-weight: 700; margin-left: 3px; }
+  .diff-value.plus { color: #5ad08a; }
+  .diff-value.minus { color: #e06c5a; }
+  .diff-value.zero { color: var(--muted); }
+  .balance .diff .diff-note { font-size: 0.72rem; margin-top: 5px; }
+  .diff-note.plus { color: #5ad08a; }
+  .diff-note.minus { color: #e06c5a; }
+  .diff-note.zero { color: var(--muted); }
+
+  .tips {
+    margin-top: 28px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 20px 24px;
+  }
+  .tips h2 {
+    font-size: 0.95rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .tips ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .tips li {
+    font-size: 0.85rem;
+    line-height: 1.8;
+    color: var(--text);
+    padding-left: 20px;
+    position: relative;
+  }
+  .tips li::before {
+    content: "◆";
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 0.7rem;
+    top: 0.35em;
+  }
+
   .actions { margin-top: 14px; text-align: center; }
   .actions button {
     background: none;
@@ -210,8 +286,31 @@
     <div class="value"><span id="totalGp">0</span><span class="gp-unit">GP</span></div>
   </div>
 
+  <div class="balance">
+    <div class="gained">
+      <label for="in-gained">取得したGP</label>
+      <div class="input-wrap">
+        <input type="number" inputmode="decimal" min="0" step="any" placeholder="0" id="in-gained">
+        <span class="unit">GP</span>
+      </div>
+    </div>
+    <div class="diff">
+      <div class="diff-label">必要GPとの差分(取得 − 必要)</div>
+      <div class="diff-value zero" id="diffValue">±0<span class="gp-unit">GP</span></div>
+      <div class="diff-note zero" id="diffNote">過不足なし</div>
+    </div>
+  </div>
+
   <div class="actions">
     <button id="resetBtn" type="button">入力をリセット</button>
+  </div>
+
+  <div class="tips">
+    <h2>⚔️ 戦功ポイント交換Tips</h2>
+    <ul>
+      <li>戦力差が大きすぎると片方が大きな損をすることになりかねません。戦力差を極力なくすのが大事なので、猛獣は外して行う必要があります。</li>
+      <li>また最大戦力で行うと負傷兵の治療が大変なので、お互い約5万で行うなどの調整をすると楽です。</li>
+    </ul>
   </div>
 
   <footer>
@@ -266,14 +365,28 @@
       document.getElementById(`gp-${r.id}`).textContent = fmt.format(gp);
     });
     document.getElementById('totalGp').textContent = fmt.format(total);
+
+    const gainedRaw = parseFloat(document.getElementById('in-gained').value);
+    const gained = (isFinite(gainedRaw) && gainedRaw > 0) ? gainedRaw : 0;
+    const diff = gained - total;
+    const diffValueEl = document.getElementById('diffValue');
+    const diffNoteEl = document.getElementById('diffNote');
+    const cls = diff > 0 ? 'plus' : diff < 0 ? 'minus' : 'zero';
+    const sign = diff > 0 ? '+' : diff < 0 ? '−' : '±';
+    diffValueEl.className = 'diff-value ' + cls;
+    diffNoteEl.className = 'diff-note ' + cls;
+    diffValueEl.innerHTML = sign + fmt.format(Math.abs(diff)) + '<span class="gp-unit">GP</span>';
+    diffNoteEl.textContent = diff > 0 ? 'GPが足りています(余剰あり)' : diff < 0 ? 'GPが不足しています' : '過不足なし';
   }
 
   RESOURCES.forEach(r => {
     document.getElementById(`in-${r.id}`).addEventListener('input', calc);
   });
+  document.getElementById('in-gained').addEventListener('input', calc);
 
   document.getElementById('resetBtn').addEventListener('click', () => {
     RESOURCES.forEach(r => { document.getElementById(`in-${r.id}`).value = ''; });
+    document.getElementById('in-gained').value = '';
     calc();
   });
 
