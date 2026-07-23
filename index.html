@@ -231,6 +231,14 @@
     top: 0.35em;
   }
 
+  .tips.todo { margin-top: 14px; }
+  .tips.todo li::before {
+    content: "☐";
+    font-size: 0.95rem;
+    top: 0.15em;
+    color: var(--muted);
+  }
+
   .actions { margin-top: 14px; text-align: center; }
   .actions button {
     background: none;
@@ -310,6 +318,14 @@
     <ul>
       <li>戦力差が大きすぎると片方が大きな損をすることになりかねません。戦力差を極力なくすのが大事なので、猛獣は外して行う必要があります。</li>
       <li>また最大戦力で行うと負傷兵の治療が大変なので、お互い約5万で行うなどの調整をすると楽です。</li>
+    </ul>
+  </div>
+
+  <div class="tips todo">
+    <h2>🔍 TODO(検証したいこと)</h2>
+    <ul>
+      <li>兵士のティアによって損得が広がるかどうか(お互いt8でやるのとお互いt9でやるので差があるかどうか)</li>
+      <li>戦力差が大きいほど取得GPは大きくなるのかどうか(相手が5万の兵の時、こちらが6万で戦った時と10万で戦った時で差がでるかどうか)</li>
     </ul>
   </div>
 
